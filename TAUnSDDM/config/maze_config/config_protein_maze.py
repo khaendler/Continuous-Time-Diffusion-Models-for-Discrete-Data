@@ -1,5 +1,7 @@
 import ml_collections
 import os
+import TAUnSDDM.lib.models.models
+import TAUnSDDM.lib.models.model_utils
 
 # config_bert_001: Param: 7 226 883
 def get_config():
@@ -71,7 +73,7 @@ def get_config():
     saving.checkpoint_freq = 10000
 
     config.sampler = sampler = ml_collections.ConfigDict()
-    sampler.name = "ElboTauL"  # TauLeaping or PCTauLeaping
+    sampler.name = "TauL"  # TauLeaping or PCTauLeaping
     sampler.num_steps = 1000
     sampler.min_t = loss.min_time
     sampler.eps_ratio = 1e-9

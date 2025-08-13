@@ -1,9 +1,9 @@
 import torch
 import numpy as np
-import lib.models.model_utils as model_utils
+import TAUnSDDM.lib.models.model_utils as model_utils
 from torchtyping import TensorType
 import math
-from lib.utils import utils
+from TAUnSDDM.lib.utils import utils
 
 
 class BirthDeathForwardBase:

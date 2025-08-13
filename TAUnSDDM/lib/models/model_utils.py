@@ -1,14 +1,13 @@
 import torch
 import torch.nn.functional as F
-import lib.utils.utils as utils
+import TAUnSDDM.lib.utils.utils as utils
+
 
 _MODELS = {}
 
 
 def register_model(cls):
     name = cls.__name__
-    if name in _MODELS:
-        raise ValueError(f"{name} is already registered!")
     _MODELS[name] = cls
     return cls
 

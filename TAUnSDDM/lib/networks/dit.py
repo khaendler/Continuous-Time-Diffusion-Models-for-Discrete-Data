@@ -10,7 +10,7 @@ from typing import Union
 import torch.nn.functional as F
 from itertools import repeat
 import collections.abc
-import lib.networks.network_utils as network_utils
+import TAUnSDDM.lib.networks.network_utils as network_utils
 
 ##### Helper
 

@@ -963,4 +963,29 @@ class Maze3S(Dataset):
             weightHigh=99,
             weightLow=97,
         )
-        return self.maze[0]  # .to(self.device)
+        return self.maze[0] # .to(self.device)
+
+
+@dataset_utils.register_dataset
+class Maze3SForAnalogBits(Dataset):
+
+    def __init__(self, cfg, device, _):
+        self.cfg = cfg
+        self.device = device
+
+    def __len__(self):
+        return int(self.cfg.data.batch_size)
+
+    def __getitem__(self, idx):
+        self.maze = maze_gen(
+            limit=self.cfg.data.limit,
+            device='cpu',
+            crop=self.cfg.data.crop_wall,
+            random_transform=self.cfg.data.random_transform,
+            dim_x=7,
+            dim_y=7,
+            pixelSizeOfTile=1,
+            weightHigh=99,
+            weightLow=97,
+        )
+        return self.maze[0] / 2 # .to(self.device)

@@ -8,7 +8,7 @@ import os
 # from config.maze_config.config_bert_maze import get_config
 # from config.maze_config.config_maskedUnet_maze import get_config
 # from config.maze_config.config_tauUnet_maze import get_config
-from config.maze_config.config_hollow_maze import get_config
+from config.maze_config.config_protein_maze import get_config
 
 # from config.maze_config.config_protein_maze import get_config
 import lib.models.models as models
@@ -27,6 +27,8 @@ import numpy as np
 from ruamel.yaml.scalarfloat import ScalarFloat
 import time
 
+from TAUnSDDM.lib.models.models import UniVarProteinScoreNetEMA
+
 # MLE: Iter: 300000 168214.7792992592
 
 
@@ -38,7 +40,7 @@ def main():
     save_location_png = os.path.join(save_location, "PNGs/")
     # dataset_location = os.path.join(script_dir, 'lib/datasets')
 
-    train_resume = True
+    train_resume = False
     print(save_location)
     if not train_resume:
         cfg = get_config()
@@ -55,6 +57,7 @@ def main():
     device = torch.device(cfg.device)
 
     model = model_utils.create_model(cfg, device)
+    #model = UniVarProteinScoreNetEMA(cfg, device , None)
 
     optimizer = optimizers_utils.get_optimizer(model.parameters(), cfg)
 
@@ -110,7 +113,7 @@ def main():
     start = time.time()
     while True:
         for minibatch in dataloader:  # tqdm(dataloader): #
-            l = training_step.step(state, minibatch, loss)
+            l = training_step.step(state=state, loss=loss, minibatch=minibatch)
             training_loss.append(l.item())
 
             if n % 100 == 0:

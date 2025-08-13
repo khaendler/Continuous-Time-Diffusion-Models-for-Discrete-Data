@@ -1,20 +1,20 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lib.networks import ddsm_networks
-import lib.models.model_utils as model_utils
+from TAUnSDDM.lib.networks import ddsm_networks
+import TAUnSDDM.lib.models.model_utils as model_utils
 from torchtyping import TensorType
 import torch.autograd.profiler as profiler
 from torch.nn.parallel import DistributedDataParallel as DDP
-from lib.networks import hollow_networks, ebm_networks, tau_networks, unet, dit, u_vit
-from lib.models.forward_model import (
+from TAUnSDDM.lib.networks import hollow_networks, ebm_networks, tau_networks, unet, dit, u_vit
+from TAUnSDDM.lib.models.forward_model import (
     UniformRate,
     UniformVariantRate,
     GaussianTargetRate,
     BirthDeathForwardBase,
 )
-from lib.datasets.sudoku import define_relative_encoding
-import lib.networks.network_utils as network_utils
+from TAUnSDDM.lib.datasets.sudoku import define_relative_encoding
+import TAUnSDDM.lib.networks.network_utils as network_utils
 
 
 def log_minus_exp(a, b, eps=1e-6):
@@ -684,6 +684,8 @@ class SudokuScoreNet(nn.Module):
 class ProteinScoreNet(nn.Module):
     def __init__(self, cfg, device, rank=None):
         super().__init__()
+
+        self.channels = cfg.data.S
 
         tmp_net = ddsm_networks.ProteinScoreNet(cfg).to(device)
         if cfg.distributed:

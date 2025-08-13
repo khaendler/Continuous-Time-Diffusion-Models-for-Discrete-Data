@@ -5,7 +5,7 @@ import warnings
 import einops
 import torch.utils.checkpoint
 from torchtyping import TensorType
-import lib.networks.network_utils as network_utils
+import TAUnSDDM.lib.networks.network_utils as network_utils
 
 
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):

@@ -2,8 +2,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lib.networks.network_utils import transformer_timestep_embedding
-from lib.networks.hollow_networks import MaskedTransformer
+from TAUnSDDM.lib.networks.network_utils import transformer_timestep_embedding
+from TAUnSDDM.lib.networks.hollow_networks import MaskedTransformer
 
 class BinaryMLPScoreFunc(nn.Module):
     def __init__(self, cfg):

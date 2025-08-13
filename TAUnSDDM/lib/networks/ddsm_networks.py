@@ -182,6 +182,7 @@ class ProteinScoreNet(nn.Module):
         super().__init__()
         embed_dim = cfg.model.embed_dim
         self.S = cfg.data.S
+        self.channels = self.S
 
         # Gaussian random feature embedding layer for time
         self.embed = nn.Sequential(GaussianFourierProjection(embed_dim=embed_dim, device=cfg.device),
@@ -230,8 +231,11 @@ class ProteinScoreNet(nn.Module):
 
         # Encoding path
         # x: NLC -> NCL
-        x = F.one_hot(x.long(), self.S) 
-        out = x.permute(0, 2, 1)
+        # x: [B, 8, H, W]
+        B, C, H, W = x.shape
+
+        # You want to reshape x to [B, 24, H*W]
+        out = x.view(B, C, H * W)
         out = self.act(self.linear(out.float()))
 
         # pos encoding
@@ -248,8 +252,9 @@ class ProteinScoreNet(nn.Module):
 
         out = self.final(out)
 
-        out = out.permute(0, 2, 1)
-
-        out = out - out.mean(axis=-1, keepdims=True)
+        #out = out.permute(0, 2, 1)
+        out = out.view(B, 8, H, W)
+        #out = out - out.mean(axis=-1, keepdims=True)
+        out = out - out.mean(dim=(2, 3), keepdim=True)
         
         return out

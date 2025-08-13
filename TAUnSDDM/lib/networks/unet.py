@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import math
-import lib.networks.network_utils as network_utils
+import TAUnSDDM.lib.networks.network_utils as network_utils
 import torch.nn.functional as F
 import numpy as np
 
