@@ -18,7 +18,7 @@ def main():
         bit_scale=cfg.model.bit_scale,
         bits=cfg.data.bits
     )
-
+    print(model.device)
     dataset = dataset_utils.get_dataset(cfg, cfg.device)
     trainer = Trainer(
         diffusion_model=model,
