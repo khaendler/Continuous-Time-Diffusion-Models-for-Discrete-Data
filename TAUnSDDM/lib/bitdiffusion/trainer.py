@@ -1,15 +1,14 @@
 from bit_diffusion.bit_diffusion import *
 
-
 class Trainer(object):
     def __init__(
             self,
             diffusion_model,
             dataset,
-            train_batch_size=16,
+            train_batch_size=128,
             gradient_accumulate_every=1,
             train_lr=1e-4,
-            train_num_steps=100000,
+            train_num_steps=300000,
             ema_update_every=10,
             ema_decay=0.995,
             adam_betas=(0.9, 0.99),
@@ -41,7 +40,7 @@ class Trainer(object):
         self.image_size = diffusion_model.image_size
 
         # dataloader
-        dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=cpu_count())
+        dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=4)
 
         dl = self.accelerator.prepare(dl)
         self.dl = cycle(dl)
@@ -92,6 +91,7 @@ class Trainer(object):
     def train(self):
         accelerator = self.accelerator
         device = accelerator.device
+        print(f'Accelerator running on {device}')
 
         with tqdm(initial=self.step, total=self.train_num_steps, disable=not accelerator.is_main_process) as pbar:
 
