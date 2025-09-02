@@ -2,7 +2,42 @@ import torch
 import functools
 from sklearn import metrics
 import numpy as np
-from lib.datasets import synthetic
+from TAUnSDDM.lib.datasets import synthetic
+
+
+def hellinger_distance(p, q):
+    """
+    Compute Hellinger distance between two discrete distributions.
+    p, q: 1D numpy arrays that sum to 1
+    """
+    p = np.asarray(p, dtype=np.float64)
+    q = np.asarray(q, dtype=np.float64)
+
+    # Normalize to ensure valid distributions
+    p /= p.sum()
+    q /= q.sum()
+
+    return np.sqrt(0.5 * np.sum((np.sqrt(p) - np.sqrt(q))**2))
+
+
+def compute_hellinger(gen_samples, real_samples, bins=(0,1,2)):
+    """
+    Compare distributions of pixel values in generated vs real samples.
+    gen_samples, real_samples: numpy arrays (N, H, W)
+    """
+    gen_flat = gen_samples.flatten()
+    real_flat = real_samples.flatten()
+
+    gen_hist, _ = np.histogram(gen_flat, bins=np.arange(len(bins)+1), density=True)
+    real_hist, _ = np.histogram(real_flat, bins=np.arange(len(bins)+1), density=True)
+
+    distance = hellinger_distance(gen_hist, real_hist)
+
+    print(f'Hellinger distance: {distance}')
+
+    return distance
+
+
 def binary_hamming_sim(x, y):
     x = x.unsqueeze(1)
     y = y.unsqueeze(0)
@@ -131,6 +166,7 @@ def mmd_rbf(X, Y, cfg, gamma=0.2):
     YY = metrics.pairwise.rbf_kernel(Y, Y, gamma)
     XY = metrics.pairwise.rbf_kernel(X, Y, gamma)
     return XX.mean() + YY.mean() - 2 * XY.mean()
+
 
 def exp_hamming_sim(x, y, bd):
     x = x.unsqueeze(1)
