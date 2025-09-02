@@ -182,6 +182,92 @@ class ProteinScoreNet(nn.Module):
         super().__init__()
         embed_dim = cfg.model.embed_dim
         self.S = cfg.data.S
+
+        # Gaussian random feature embedding layer for time
+        self.embed = nn.Sequential(GaussianFourierProjection(embed_dim=embed_dim, device=cfg.device),
+                                   nn.Linear(embed_dim, embed_dim))
+        n = embed_dim
+
+        self.linear = nn.Conv1d(self.S, n, kernel_size=9, padding=4)
+        self.blocks = nn.ModuleList([nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=4, padding=16),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=16, padding=64),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=64, padding=256),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=4, padding=16),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=16, padding=64),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=64, padding=256),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=4, padding=16),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=16, padding=64),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=64, padding=256),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, padding=4),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=4, padding=16),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=16, padding=64),
+                                     nn.Conv1d(n, n, kernel_size=9, dilation=64, padding=256)])
+
+        self.denses = nn.ModuleList([Dense(embed_dim, n) for _ in range(20)])
+        self.norms = nn.ModuleList([nn.GroupNorm(1, n) for _ in range(20)])
+
+        # The swish activation function
+        self.act = lambda x: x * torch.sigmoid(x)
+        self.relu = nn.ReLU()
+        self.softplus = nn.Softplus()
+        self.scale = nn.Parameter(torch.ones(1, device=cfg.device))
+        self.final = nn.Sequential(nn.Conv1d(n, n, kernel_size=1),
+                                   nn.GELU(),
+                                   nn.Conv1d(n, self.S, kernel_size=1))
+
+    def forward(self, x, t):
+        # Obtain the Gaussian random feature embedding for t
+        # embed: [N, embed_dim]
+        embed = self.act(self.embed(t / 2))
+
+        # Encoding path
+        # x: NLC -> NCL
+        x = F.one_hot(x.long(), self.S)
+        out = x.permute(0, 2, 1)
+        out = self.act(self.linear(out.float()))
+
+        # pos encoding
+        i = 1
+        for block, dense, norm in zip(self.blocks, self.denses, self.norms):
+            h = self.act(block(norm(out + dense(embed)[:, :, None])))
+            # print((out == h).all())
+            i += 1
+            if h.shape == out.shape:
+                out = h + out
+            else:
+                out = h
+
+        out = self.final(out)
+
+        out = out.permute(0, 2, 1)
+
+        out = out - out.mean(axis=-1, keepdims=True)
+
+        return out
+
+
+class ScoreNet(nn.Module):
+    """A time-dependent score-based model built upon U-Net architecture."""
+
+    def __init__(self, cfg):
+        """Initialize a time-dependent score-based network.
+
+        Args:
+          marginal_prob_std: A function that takes time t and gives the standard
+            deviation of the perturbation kernel p_{0t}(x(t) | x(0)).
+          channels: The number of channels for feature maps of each resolution.
+          embed_dim: The dimensionality of Gaussian random feature embeddings.
+        """
+        super().__init__()
+        embed_dim = cfg.model.embed_dim
+        self.S = cfg.data.S
         self.channels = self.S
 
         # Gaussian random feature embedding layer for time
@@ -252,9 +338,7 @@ class ProteinScoreNet(nn.Module):
 
         out = self.final(out)
 
-        #out = out.permute(0, 2, 1)
         out = out.view(B, 8, H, W)
-        #out = out - out.mean(axis=-1, keepdims=True)
         out = out - out.mean(dim=(2, 3), keepdim=True)
         
         return out
