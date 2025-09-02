@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
-import lib.losses.losses_utils as losses_utils
+import TAUnSDDM.lib.losses.losses_utils as losses_utils
 import torch.autograd.profiler as profiler
 import torch.nn.functional as F
-import lib.utils.utils as utils
+import TAUnSDDM.lib.utils.utils as utils
 import time
-from lib.models.model_utils import get_logprob_with_logits
-from lib.d3pm import make_diffusion
+from TAUnSDDM.lib.models.model_utils import get_logprob_with_logits
+from TAUnSDDM.lib.d3pm import make_diffusion
 
 @losses_utils.register_loss
 class CTElbo:
@@ -1600,12 +1600,15 @@ class NLL:
         if self.one_forward_pass:
             #x_logits = model(x_tilde, ts)  # (B, D, S)
             x_logits = model(x_t, ts)
+            x_logits = x_logits.view(B, -1, S)
             # ensures that positive
             p0t_reg = F.softmax(x_logits, dim=2)  # (B, D, S)
             reg_x = x_tilde
         else:
             # x_t = x from Paper
             x_logits = model(x_t, ts)  # (B, D, S)
+            B, C, H, W, S = x_logits.shape
+            x_logits = x_logits.view(B, C * H * W, S)
             p0t_reg = F.softmax(x_logits, dim=2)  # (B, D, S)
             reg_x = x_t
 
