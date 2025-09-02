@@ -13,7 +13,7 @@ def get_config():
     config.num_gpus = 0
 
     config.loss = loss = ml_collections.ConfigDict()
-    loss.name = "CTElbo"
+    loss.name = "NLL"
     loss.eps_ratio = 1e-9
     loss.nll_weight = 0
     loss.min_time = 0.007
@@ -31,7 +31,7 @@ def get_config():
     training.max_t = 0.99999
 
     config.data = data = ml_collections.ConfigDict()
-    data.name = "Maze3S"
+    data.name = "Maze3SComplete"
     #data.location = 'lib/datasets/'
     data.is_img = True
     data.S = 3
