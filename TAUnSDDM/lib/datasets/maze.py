@@ -781,13 +781,13 @@ def find_path(maze, random_entry=False):
     # BFS-Algorithm, to find shortest solution path
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     if random_entry:
-        
+
         entries = find_entries(maze)
         if len(entries) != 2:
             return None
         start = entries[0]
         end = entries[1]
-        
+
     else:
         start = (0, 1)
         end = (14, 13)
@@ -885,7 +885,7 @@ def maze_acc(samples):
                 path_len.append(path_l)
                 wall_len.append(wall_l)
                 way_len.append(way_l)
-            else: 
+            else:
                 acc.append(0)
         else:
             acc.append(0)
@@ -972,12 +972,7 @@ class Maze3SForAnalogBits(Dataset):
     def __init__(self, cfg, device, _):
         self.cfg = cfg
         self.device = device
-
-    def __len__(self):
-        return int(self.cfg.data.batch_size)
-
-    def __getitem__(self, idx):
-        self.maze = maze_gen(
+        mazes = maze_gen(
             limit=self.cfg.data.limit,
             device='cpu',
             crop=self.cfg.data.crop_wall,
@@ -988,4 +983,10 @@ class Maze3SForAnalogBits(Dataset):
             weightHigh=99,
             weightLow=97,
         )
-        return self.maze[0] / 2 # .to(self.device)
+        self.data = mazes / 2
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx] # .to(self.device)
