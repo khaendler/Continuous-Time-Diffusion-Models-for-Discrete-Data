@@ -56,8 +56,8 @@ def main():
 
     device = torch.device(cfg.device)
 
-    model = model_utils.create_model(cfg, device)
-    #model = UniVarProteinScoreNetEMA(cfg, device , None)
+    #model = model_utils.create_model(cfg, device)
+    model = UniVarProteinScoreNetEMA(cfg, device , None)
 
     optimizer = optimizers_utils.get_optimizer(model.parameters(), cfg)
 
@@ -75,7 +75,8 @@ def main():
 
     sampler = sampling_utils.get_sampler(cfg)
 
-    loss = losses_utils.get_loss(cfg)
+    #loss = losses_utils.get_loss(cfg)
+    loss = losses.NLL(cfg)
 
     training_step = training_utils.get_train_step(cfg)
 
