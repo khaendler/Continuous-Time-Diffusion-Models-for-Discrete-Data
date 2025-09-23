@@ -1600,15 +1600,14 @@ class NLL:
         if self.one_forward_pass:
             #x_logits = model(x_tilde, ts)  # (B, D, S)
             x_logits = model(x_t, ts)
-            x_logits = x_logits.view(B, -1, S)
+            #x_logits = x_logits.view(B, -1, S)
             # ensures that positive
             p0t_reg = F.softmax(x_logits, dim=2)  # (B, D, S)
             reg_x = x_tilde
         else:
             # x_t = x from Paper
             x_logits = model(x_t, ts)  # (B, D, S)
-            B, C, H, W, S = x_logits.shape
-            x_logits = x_logits.view(B, C * H * W, S)
+            #x_logits = x_logits.view(B, -1, S)
             p0t_reg = F.softmax(x_logits, dim=2)  # (B, D, S)
             reg_x = x_t
 

@@ -108,32 +108,36 @@ def gen_sudoku(num):
 @dataset_utils.register_dataset
 class SudokuDataset(Dataset):
     def __init__(self, cfg, device, _):
-        self.batch_size = cfg.data.batch_size
+        self.limit = cfg.data.limit
         self.device = device
+
+        sudokus = gen_sudoku(self.limit).astype(np.float32)
+        sudokus = (sudokus - 1.0) / 8.0
+        self.sudokus = torch.from_numpy(sudokus).unsqueeze(1)
+
     def __len__(self):
-        return int(self.batch_size * 1000)
+        return self.limit
 
     def __getitem__(self, idx):
-        sudoku = gen_sudoku(1)
-        dataset = np.eye(9)[sudoku.reshape(sudoku.shape[0], -1) - 1]
-        return torch.tensor(dataset, device=self.device)
+        return self.sudokus[idx]
 
 
-def sudoku_acc(sample, return_array=False):
-    #sample = sample.detach().cpu().numpy()
+def sudoku_acc(sample, return_acc=False):
+    sample = sample * 8.0 + 1.0
+    sample = sample.round().astype(int)
+
     correct = 0
     total = sample.shape[0]
-    ans = sample.argmax(-1) + 1
-    numbers_1_N = np.arange(1, 9 + 1)
+    numbers_1_N = np.arange(1, 10)
     corrects = []
-    for board in ans:
+
+    for board in sample:
         if np.all(np.sort(board, axis=1) == numbers_1_N) and np.all(
             np.sort(board.T, axis=1) == numbers_1_N
         ):
-            # Check blocks
-
+            # Check 3x3 blocks
             blocks = board.reshape(3, 3, 3, 3).transpose(0, 2, 1, 3).reshape(9, 9)
-            if np.all(np.sort(board.T, axis=1) == numbers_1_N):
+            if np.all(np.sort(blocks, axis=1) == numbers_1_N):
                 correct += 1
                 corrects.append(True)
             else:
@@ -141,7 +145,8 @@ def sudoku_acc(sample, return_array=False):
         else:
             corrects.append(False)
 
-    if return_array:
-        return corrects
+    acc = correct / total
+    if return_acc:
+        return acc
     else:
         print("correct {} %".format(100 * correct / total))

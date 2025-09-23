@@ -1,8 +1,15 @@
+import numpy as np
+import torch
 import multiprocessing as mp
+import matplotlib.pyplot as plt
 
 import TAUnSDDM.lib.datasets.dataset_utils as dataset_utils
 from TAUnSDDM.lib.bitdiffusion.trainer import Trainer
 from TAUnSDDM.config.config_bitdiffusion import get_config
+from TAUnSDDM.lib.datasets.maze import maze_acc, Maze3SForAnalogBits
+from TAUnSDDM.lib.datasets.sudoku import sudoku_acc
+from TAUnSDDM.lib.datasets.metrics import compute_hellinger
+
 
 def main():
     cfg = get_config('SudokuDataset')
@@ -19,6 +26,7 @@ def main():
         bits=cfg.data.bits
     )
     print(model.device)
+    cfg.data.limit = 100
     dataset = dataset_utils.get_dataset(cfg, cfg.device)
     trainer = Trainer(
         diffusion_model=model,
@@ -38,7 +46,22 @@ def main():
         split_batches=cfg.training.split_batches
     )
 
-    trainer.train()
+    trainer.load('29')
+    model = trainer.ema.ema_model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    gen_samples = model.sample(batch_size=5000)
+    gen_samples = gen_samples.squeeze(1).cpu().numpy()
+    acc = sudoku_acc(gen_samples)
+
+
+    cfg.data.limit = 5000
+    dataset = dataset_utils.get_dataset(cfg, device="cpu")
+    real_samples = torch.stack([dataset[i] for i in range(len(dataset))], dim=0)
+    real_samples = real_samples.squeeze(1).numpy()
+    h_dist = compute_hellinger(gen_samples, real_samples)
+    print(f'Accuracy: {acc}')
+
 
 if __name__ == "__main__":
     mp.set_start_method('spawn', force=True)

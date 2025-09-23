@@ -80,13 +80,18 @@ def main():
 
     training_step = training_utils.get_train_step(cfg)
 
-    if cfg.data.name == "Maze3SComplete":
-        limit = (cfg.training.n_iters - state["n_iter"] + 1) * cfg.data.batch_size
-        cfg.data.limit = limit
+    #if cfg.data.name == "Maze3SComplete":
+    #    limit = (cfg.training.n_iters - state["n_iter"] + 1) * cfg.data.batch_size
+    #    cfg.data.limit = limit
 
     dataset = dataset_utils.get_dataset(cfg, device)
+    s = torch.utils.data.RandomSampler(
+        dataset, replacement=True,
+        num_samples=cfg.training.n_iters * cfg.data.batch_size
+    )
     dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=cfg.data.batch_size, shuffle=cfg.data.shuffle
+        dataset, batch_size=cfg.data.batch_size,
+        sampler=s, drop_last=True
     )
 
     print("Info:")
@@ -133,7 +138,7 @@ def main():
                     save_location_png, f"loss_{cfg.loss.name}{state['n_iter']}.npy"
                 )
                 plt.plot(training_loss)
-                np.save(saving_train_loss, training_loss)
+                #np.save(saving_train_loss, training_loss)
                 plt.xlabel("Iterations")
                 plt.ylabel("Loss")
                 plt.title("Training Loss")

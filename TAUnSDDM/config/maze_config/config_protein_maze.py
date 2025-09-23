@@ -22,7 +22,7 @@ def get_config():
     config.training = training = ml_collections.ConfigDict()
     training.train_step_name = "Standard"
 
-    training.n_iters = 300000 #0  # 2000 #2000000
+    training.n_iters = 3000 #0  # 2000 #2000000
 
     training.clip_grad = True
     training.grad_norm = 35  # 1
@@ -43,7 +43,7 @@ def get_config():
     data.shape = [1, data.image_size, data.image_size]
     data.use_augm = False
     data.crop_wall = False
-    data.limit = 1
+    data.limit = 3000
     data.random_transform = True
     #data.use_augm = False
 
