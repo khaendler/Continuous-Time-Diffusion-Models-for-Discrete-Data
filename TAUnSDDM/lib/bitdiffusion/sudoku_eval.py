@@ -1,4 +1,4 @@
-import numpy as np
+import argparse
 import torch
 import multiprocessing as mp
 import matplotlib.pyplot as plt
@@ -11,8 +11,8 @@ from TAUnSDDM.lib.datasets.sudoku import sudoku_acc
 from TAUnSDDM.lib.datasets.metrics import compute_hellinger
 
 
-def main():
-    cfg = get_config('SudokuDataset')
+def main(config_name):
+    cfg = get_config(config_name)
 
     net = cfg.model.net_class(cfg)
     model = cfg.model.model_class(
@@ -52,8 +52,7 @@ def main():
     model.to(device)
     gen_samples = model.sample(batch_size=5000)
     gen_samples = gen_samples.squeeze(1).cpu().numpy()
-    acc = sudoku_acc(gen_samples)
-
+    acc = sudoku_acc(cfg, gen_samples)
 
     cfg.data.limit = 5000
     dataset = dataset_utils.get_dataset(cfg, device="cpu")
@@ -64,5 +63,15 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Train a BitDiffusion model.")
+    parser.add_argument(
+        "--config_name",
+        type=str,
+        default="SudokuBitDiffusion",
+        help="Name of the configuration to load."
+    )
+
+    args = parser.parse_args()
+
     mp.set_start_method('spawn', force=True)
-    main()
+    main(args.config_name)

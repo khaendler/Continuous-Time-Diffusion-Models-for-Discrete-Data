@@ -112,7 +112,12 @@ class SudokuDataset(Dataset):
         self.device = device
 
         sudokus = gen_sudoku(self.limit).astype(np.float32)
-        sudokus = (sudokus - 1.0) / 8.0
+
+        if cfg.data.powered:
+            sudokus = (2 ** sudokus) / (2**9)
+        else:
+            sudokus = sudokus / 9.0
+
         self.sudokus = torch.from_numpy(sudokus).unsqueeze(1)
 
     def __len__(self):
@@ -122,13 +127,18 @@ class SudokuDataset(Dataset):
         return self.sudokus[idx]
 
 
-def sudoku_acc(sample, return_acc=False):
-    sample = sample * 8.0 + 1.0
-    sample = sample.round().astype(int)
+def sudoku_acc(cfg, sample, return_acc=False):
+    if cfg.data.powered:
+        sample = np.rint(np.log2(sample * (2**9))).astype(int)
+
+    else:
+        sample = sample * 9.0
+        sample = sample.round().astype(int)
+
+    numbers_1_N = np.arange(1, 10)
 
     correct = 0
     total = sample.shape[0]
-    numbers_1_N = np.arange(1, 10)
     corrects = []
 
     for board in sample:
@@ -145,8 +155,8 @@ def sudoku_acc(sample, return_acc=False):
         else:
             corrects.append(False)
 
+    print(correct, total)
     acc = correct / total
     if return_acc:
         return acc
-    else:
-        print("correct {} %".format(100 * correct / total))
+    print(f"Acc: {100 * acc}%, correct: {correct}, total: {total}")

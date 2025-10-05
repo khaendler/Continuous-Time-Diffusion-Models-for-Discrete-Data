@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import torch
 import multiprocessing as mp
@@ -9,8 +10,8 @@ from TAUnSDDM.lib.datasets.maze import maze_acc, Maze3SForAnalogBits
 from TAUnSDDM.lib.datasets.metrics import compute_hellinger
 
 
-def main():
-    cfg = get_config('MazeBitDiffusion')
+def main(config_name):
+    cfg = get_config(config_name)
 
     net = cfg.model.net_class(cfg)
     model = cfg.model.model_class(
@@ -51,7 +52,7 @@ def main():
     gen_samples = model.sample(batch_size=5000)
     gen_samples = gen_samples.squeeze(1)
     gen_samples_int = (gen_samples * 2).round().cpu().numpy().astype(np.int32)
-    maze_results = maze_acc(gen_samples_int)
+    maze_results = maze_acc(cfg, gen_samples_int)
 
     cfg.data.limit = 5000
     dataset = dataset_utils.get_dataset(cfg, device="cpu")
@@ -61,5 +62,15 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Train a BitDiffusion model.")
+    parser.add_argument(
+        "--config_name",
+        type=str,
+        default="SudokuBitDiffusion",
+        help="Name of the configuration to load."
+    )
+
+    args = parser.parse_args()
+
     mp.set_start_method('spawn', force=True)
-    main()
+    main(args.config_name)

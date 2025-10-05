@@ -1,11 +1,12 @@
+import argparse
 import multiprocessing as mp
 
 import TAUnSDDM.lib.datasets.dataset_utils as dataset_utils
 from TAUnSDDM.lib.bitdiffusion.trainer import Trainer
 from TAUnSDDM.config.config_bitdiffusion import get_config
 
-def main():
-    cfg = get_config('SudokuDataset')
+def main(config_name):
+    cfg = get_config(config_name)
 
     net = cfg.model.net_class(cfg)
     model = cfg.model.model_class(
@@ -41,5 +42,15 @@ def main():
     trainer.train()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Train a BitDiffusion model.")
+    parser.add_argument(
+        "--config_name",
+        type=str,
+        default="MazeBitDiffusion",
+        help="Name of the configuration to load."
+    )
+
+    args = parser.parse_args()
+
     mp.set_start_method('spawn', force=True)
-    main()
+    main(args.config_name)

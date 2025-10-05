@@ -267,6 +267,7 @@ class ScoreNet(nn.Module):
         """
         super().__init__()
         embed_dim = cfg.model.embed_dim
+        self.cfg = cfg
         self.S = cfg.data.S
         self.channels = self.S
 
@@ -338,7 +339,7 @@ class ScoreNet(nn.Module):
 
         out = self.final(out)
 
-        out = out.view(B, 8, H, W)
+        out = out.view(B, self.cfg.data.bits, H, W)
         out = out - out.mean(dim=(2, 3), keepdim=True)
         
         return out

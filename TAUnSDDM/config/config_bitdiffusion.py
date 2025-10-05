@@ -10,7 +10,7 @@ from TAUnSDDM.lib.bitdiffusion.model import BitDiffusionSubset
 def get_config(name):
     config = ml_collections.ConfigDict()
     if name == 'MazeBitDiffusion':
-        save_directory = "./results"
+        save_directory = "./results_maze"
 
         config.device = "cuda:0"
         config.distributed = False
@@ -26,7 +26,7 @@ def get_config(name):
         training.save_and_sample_every = 10000
         training.num_samples = 16
         training.results_folder = save_directory
-        training.amp = True
+        training.amp = False
         training.mixed_precision_type = 'fp16'
         training.split_batches = True
         training.resume = True
@@ -36,7 +36,9 @@ def get_config(name):
         data.batch_size = 128
         data.bits = 8
         data.S = data.bits
-        data.image_size = 15
+        data.dim_x = 7
+        data.dim_y = 7
+        data.image_size = data.dim_x + data.dim_y + 1
         data.shape = [1, data.image_size, data.image_size]
         data.crop_wall = False
         data.limit = 100000
@@ -56,8 +58,56 @@ def get_config(name):
 
         config.network = network = ml_collections.ConfigDict()
 
+    elif name == 'Maze14x14BitDiffusion':
+        save_directory = "./results_maze14x14"
 
-    elif name == 'SudokuDataset':
+        config.device = "cuda:0"
+        config.distributed = False
+        config.num_gpus = 0
+
+        config.training = training = ml_collections.ConfigDict()
+        training.gradient_accumulate_every = 1
+        training.train_lr = 2e-4 # 1.5e-4
+        training.adam_betas = (0.9, 0.999)
+        training.train_num_steps = 300000  # 0  # 2000 #2000000
+        training.ema_update_every = 20
+        training.ema_decay = 0.9999
+        training.save_and_sample_every = 10000
+        training.num_samples = 16
+        training.results_folder = save_directory
+        training.amp = False
+        training.mixed_precision_type = 'fp16'
+        training.split_batches = True
+        training.resume = True
+
+        config.data = data = ml_collections.ConfigDict()
+        data.name = 'Maze3SForAnalogBits'
+        data.batch_size = 128
+        data.bits = 8
+        data.S = data.bits
+        data.dim_x = 14
+        data.dim_y = 14
+        data.image_size = data.dim_x + data.dim_y + 1
+        data.shape = [1, data.image_size, data.image_size]
+        data.crop_wall = False
+        data.limit = 100000
+        data.random_transform = True
+
+        config.model = model = ml_collections.ConfigDict()
+        model.concat_dim = data.shape[0]
+        model.model_class = BitDiffusionSubset
+        model.timesteps = 1000
+        model.use_ddim = False
+        model.noise_schedule = 'cosine'
+        model.time_difference = 0.
+        model.bit_scale = 1.
+
+        model.net_class = ScoreNet
+        model.embed_dim = 200
+
+        config.network = network = ml_collections.ConfigDict()
+
+    elif name == 'SudokuBitDiffusion':
         save_directory = "./results_sudoku"
 
         config.device = "cuda:0"
@@ -82,13 +132,14 @@ def get_config(name):
         config.data = data = ml_collections.ConfigDict()
         data.name = 'SudokuDataset'
         data.batch_size = 128
-        data.bits = 8
+        data.bits = 9
         data.S = data.bits
         data.image_size = 9
         data.shape = [1, data.image_size, data.image_size]
         data.crop_wall = False
         data.limit = 100000
         data.random_transform = True
+        data.powered = False
 
         config.model = model = ml_collections.ConfigDict()
         model.concat_dim = data.shape[0]
@@ -104,5 +155,52 @@ def get_config(name):
 
         config.network = network = ml_collections.ConfigDict()
 
+    elif name == 'PoweredSudokuBitDiffusion':
+        save_directory = "./results_powered_sudoku"
+
+        config.device = "cuda:0"
+        config.distributed = False
+        config.num_gpus = 0
+
+        config.training = training = ml_collections.ConfigDict()
+        training.gradient_accumulate_every = 1
+        training.train_lr = 2e-4 # 1.5e-4
+        training.adam_betas = (0.9, 0.999)
+        training.train_num_steps = 300000  # 0  # 2000 #2000000
+        training.ema_update_every = 20
+        training.ema_decay = 0.9999
+        training.save_and_sample_every = 10000
+        training.num_samples = 16
+        training.results_folder = save_directory
+        training.amp = False
+        training.mixed_precision_type = 'fp16'
+        training.split_batches = True
+        training.resume = True
+
+        config.data = data = ml_collections.ConfigDict()
+        data.name = 'SudokuDataset'
+        data.batch_size = 128
+        data.bits = 9
+        data.S = data.bits
+        data.image_size = 9
+        data.shape = [1, data.image_size, data.image_size]
+        data.crop_wall = False
+        data.limit = 100000
+        data.random_transform = True
+        data.powered = True
+
+        config.model = model = ml_collections.ConfigDict()
+        model.concat_dim = data.shape[0]
+        model.model_class = BitDiffusionSubset
+        model.timesteps = 1000
+        model.use_ddim = False
+        model.noise_schedule = 'cosine'
+        model.time_difference = 0.
+        model.bit_scale = 1.
+
+        model.net_class = ScoreNet
+        model.embed_dim = 200
+
+        config.network = network = ml_collections.ConfigDict()
 
     return config

@@ -777,7 +777,7 @@ def find_entries(array):
     return entries
 
 
-def find_path(maze, random_entry=False):
+def find_path(maze, dim_x, dim_y, random_entry=False):
     # BFS-Algorithm, to find shortest solution path
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     if random_entry:
@@ -790,7 +790,7 @@ def find_path(maze, random_entry=False):
 
     else:
         start = (0, 1)
-        end = (14, 13)
+        end = (dim_x+dim_y, dim_x+dim_y-1)
 
     visited = np.zeros_like(maze, dtype=bool)
     visited[start] = True
@@ -841,7 +841,7 @@ def maze_gen(
             mazeImageBW = mazeImageBW.crop((1, 1, cropped_size, cropped_size))
 
         image_array = np.array(mazeImageBW) * 2
-        solved_maze = find_path(image_array, random_transform)
+        solved_maze = find_path(image_array, dim_x, dim_y, random_transform)
 
         if random_transform and random.choice([True, False]):
             solved_maze = np.rot90(solved_maze).copy()
@@ -863,8 +863,8 @@ def path_length(maze):
     way_len = np.count_nonzero(maze == 2)
     return path_len, wall_len, way_len
 
-def maze_acc(samples):
-    samples = samples.reshape(-1, 15, 15)
+def maze_acc(cfg, samples):
+    samples = samples.reshape(-1, cfg.data.image_size, cfg.data.image_size)
     B = samples.shape[0]
     samples_clean = samples.copy()
     samples_clean[samples_clean == 1] = 2
@@ -874,7 +874,7 @@ def maze_acc(samples):
     wall_len = []
     way_len = []
     for i in range(B):
-        solved_maze = find_path(samples_clean[i, :, :], True)
+        solved_maze = find_path(samples_clean[i, :, :], dim_x=cfg.data.dim_x, dim_y=cfg.data.dim_y, random_entry=True)
 
         if solved_maze is not None:
             #if np.array_equal(solved_maze, samples[i, :, :]):
@@ -977,8 +977,8 @@ class Maze3SForAnalogBits(Dataset):
             device='cpu',
             crop=self.cfg.data.crop_wall,
             random_transform=self.cfg.data.random_transform,
-            dim_x=7,
-            dim_y=7,
+            dim_x=self.cfg.data.dim_x,
+            dim_y=self.cfg.data.dim_y,
             pixelSizeOfTile=1,
             weightHigh=99,
             weightLow=97,
