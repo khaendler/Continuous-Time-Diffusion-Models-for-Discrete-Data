@@ -121,7 +121,7 @@ The config files contain the following:
 | Maze (7x7)                                   | 92%      | 0.3                |
 | Maze (14x14)                                 | 75.84%   | 0.0027             |
 | Sudoku                                       | 9.4%     | 0.0002             |
-| Powered Sudoku                               | 0.0      | 0.512              |
+| Powered Sudoku                               | 0.0%     | 0.512              |
 
 
 Some generated 14x14 mazes and Sudokus:
