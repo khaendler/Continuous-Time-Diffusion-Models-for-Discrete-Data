@@ -123,7 +123,6 @@ The config files contain the following:
 | Sudoku                                       | 9.4%     | 0.0002             |
 | Powered Sudoku                               | 0.0      | 0.512              |
 
-Note: there might still be an error in the code for powered Sudokus.
 
 Some generated 14x14 mazes and Sudokus:
 
